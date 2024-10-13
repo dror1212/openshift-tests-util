@@ -6,7 +6,6 @@ import (
 	"myproject/util"
 	"myproject/consts"
 	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -18,7 +17,7 @@ var _ = Describe("Service type LoadBalancer on Pod", func() {
 		serviceName string
 		imageClient = "CLIENT_IMAGE"
 		image       = "HTTPD_IMAGE"
-		externalIP  string
+		serviceIP  string
 	)
 
 	BeforeEach(func() {
@@ -46,16 +45,13 @@ var _ = Describe("Service type LoadBalancer on Pod", func() {
 	})
 
 	It("should expose the service with a LoadBalancer and allow access to a pod from another pod", func() {
+		
 		// Wait for the service to get an external IP
-		Eventually(func() (string, error) {
-			var err error
-			externalIP, err = util.GetServiceIP(ctx.Clientset, ctx.Namespace, serviceName)
-			return externalIP, err
-		}, 2*time.Minute, 10*time.Second).ShouldNot(BeEmpty(), "Expected service to get an external IP")
+		serviceIP = ctx.WaitForServiceIP(serviceName, 2*time.Minute, 10*time.Second)
 
 		// Define the test pod that will access the service
 		testContainers := []util.ContainerConfig{
-			util.CreateContainerConfig("curl-container", imageClient, []string{"curl", "--fail", "--retry", "5", "-w", "HTTP Response Code: %{http_code}\n", "http://" + externalIP}, util.GenerateResourceRequirements("100m", "400m", "200Mi", "200Mi")),
+			util.CreateContainerConfig("curl-container", imageClient, []string{"curl", "--fail", "--retry", "5", "-w", "HTTP Response Code: %{http_code}\n", "http://" + serviceIP}, util.GenerateResourceRequirements("100m", "400m", "200Mi", "200Mi")),
 		}
 
 		// Create the test pod using the retry mechanism

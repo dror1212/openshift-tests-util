@@ -17,3 +17,5 @@ vendor/
 # Kubeconfig or private config files
 kubeconfig
 .env
+
+*.test

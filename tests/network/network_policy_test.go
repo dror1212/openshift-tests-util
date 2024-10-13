@@ -46,32 +46,24 @@ var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 		servicePorts := []corev1.ServicePort{
 			util.GeneratePort("http", 80, 80, "TCP"),
 		}
+
 		ctx.CreateServiceHelper(serviceName, corev1.ServiceTypeClusterIP, servicePorts, map[string]string{"app": podName})
 	})
-	
+
 	// TODO: Add test before policy created
 	It("should deny traffic from other namespaces on port 80 before applying NetworkPolicy, then allow after applying NetworkPolicy", func() {
+
 		// Fetch the service IP
-		Eventually(func() (string, error) {
-			var err error
-			serviceIP, err = util.GetServiceIP(ctx.Clientset, ctx.Namespace, serviceName)
-			return serviceIP, err
-		}, 2*time.Minute, 10*time.Second).ShouldNot(BeEmpty(), "Expected service to get an IP")
+		serviceIP = ctx.WaitForServiceIP(serviceName, 2*time.Minute, 10*time.Second)
 	
 		// Define the test pod that will access the service from another namespace
 		testContainers := []util.ContainerConfig{
 			util.CreateContainerConfig("curl-container", imageClient, []string{"curl", "--max-time", "5", "-w", "HTTP Response Code: %{http_code}\n", "http://" + serviceIP}, util.GenerateResourceRequirements("100m", "400m", "200Mi", "200Mi")),
 		}
-	
-		// // Create the test pod in a different namespace
-		// ctxHelper.CreateTestPodHelper(testPodName, testContainers, 3)
-	
-		// // Verify access is denied before NetworkPolicy is applied
-		// ctxHelper.VerifyPodNoAccess(testPodName, "HTTP Response Code: 200")
 
 		// Create the NetworkPolicy to allow traffic from other namespaces on port 80
 		networkPorts := util.CreateNetworkPolicyPort(80, "TCP")
-		_, err := util.CreateNetworkPolicyWithNamespaceAllow(ctx.Clientset, ctx.Namespace, policyName, networkPorts)
+		_, err := util.CreateNetworkPolicyWithNamespaceAllow(ctx.KubeClient, ctx.Namespace, policyName, networkPorts)
 		Expect(err).ToNot(HaveOccurred(), "Failed to create network policy with allow rule")
 
 		// Wait a bit for the policy to take effect
@@ -86,9 +78,9 @@ var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 
 	AfterEach(func() {
 		// Clean up resources: Delete pods, services, and network policies
+		ctx.CleanupResource(serviceName, "service")
 		ctx.CleanupResource(podName, "pod")
 		ctxHelper.CleanupResource(testPodName, "pod")
-		ctx.CleanupResource(serviceName, "service")
-		ctx.CleanupNetworkPolicy(policyName)
+		ctxHelper.CleanupResource(serviceName, "networkPolicy")
 	})
 })

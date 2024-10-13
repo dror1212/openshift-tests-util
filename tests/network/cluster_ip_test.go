@@ -6,7 +6,6 @@ import (
 	"myproject/util"
 	"myproject/consts"
 	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -46,11 +45,7 @@ var _ = Describe("Service type ClusterIP access from same namespace", func() {
 	})
 
 	It("should allow access to the ClusterIP service from the same namespace", func() {
-		Eventually(func() (string, error) {
-			var err error
-			serviceIP, err = util.GetServiceIP(ctx.Clientset, ctx.Namespace, serviceName)
-			return serviceIP, err
-		}, 2*time.Minute, 10*time.Second).ShouldNot(BeEmpty(), "Expected service to get a service IP")
+		serviceIP = ctx.WaitForServiceIP(serviceName, 2*time.Minute, 10*time.Second)
 	
 		// Log the retrieved ClusterIP
 		util.LogInfo("ClusterIP for service %s: %s", serviceName, serviceIP)

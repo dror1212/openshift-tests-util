@@ -6,7 +6,6 @@ import (
 	"myproject/util"
 	"myproject/consts"
 	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -48,11 +47,9 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 	})
 
 	It("should access the service via the route from within the cluster", func() {
+		
 		// Fetch the route URL and ensure it's ready
-		Eventually(func() (string, error) {
-			routeURL = ctx.GetRouteURLHelper(routeName)
-			return routeURL, nil
-		}, 2*time.Minute, 10*time.Second).ShouldNot(BeEmpty(), "Expected route to get a valid URL")
+		routeURL = ctx.WaitForRouteURL(routeName, 2*time.Minute, 10*time.Second)
 
 		// Define the test pod that will access the route using curl
 		testContainers := []util.ContainerConfig{
