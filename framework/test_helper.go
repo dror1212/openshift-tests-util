@@ -26,7 +26,6 @@ type TestContext struct {
 }
 
 // Setup initializes the environment (e.g., auth, logging) and sets the random name for each test
-// Setup initializes the environment (e.g., auth, logging) and sets the random name for each test
 func Setup(namespace string) *TestContext {
 	var err error
 
@@ -126,15 +125,14 @@ func (ctx *TestContext) CreateServiceHelper(serviceName string, serviceType core
 }
 
 // CreateTestPodHelper creates a test pod with a retry mechanism
-func (ctx *TestContext) CreateTestPodHelper(podName string, containers []util.ContainerConfig) {
-	err := ctx.CreateTestPodWithRetry(podName, containers, 20, 15*time.Second, 5*time.Minute)
+func (ctx *TestContext) CreateTestPodHelper(podName string, containers []util.ContainerConfig, retries int) {
+	err := ctx.CreateTestPodWithRetry(podName, containers, retries, 15*time.Second, 5*time.Minute)
 	Expect(err).ToNot(HaveOccurred(), "Failed to create test pod %s", podName)
 }
 
-// VerifyPodAccess verifies if a pod can access a service by checking logs for a specific response (e.g., HTTP 200)
-func (ctx *TestContext) VerifyPodAccess(podName, expectedResponse string) {
+func (ctx *TestContext) VerifyPodResponse(podName, expectedResponse string) {
 	err := ctx.WaitForPodAndCheckLogs(podName, expectedResponse, 5*time.Second, 5*time.Minute)
-	Expect(err).ToNot(HaveOccurred(), "Pod %s failed to access the service", podName)
+	Expect(err).ToNot(HaveOccurred(), "Pod %s returned different response", podName)
 }
 
 // CreateRouteHelper creates a route for the given service with the given port and hostname
@@ -149,4 +147,10 @@ func (ctx *TestContext) GetRouteURLHelper(routeName string) string {
 	routeURL, err := util.GetRouteURL(ctx.RouteClient, ctx.Namespace, routeName)
 	Expect(err).ToNot(HaveOccurred(), "Failed to get URL for Route %s", routeName)
 	return routeURL
+}
+
+// CleanupNetworkPolicy cleans up a NetworkPolicy
+func (ctx *TestContext) CleanupNetworkPolicy(policyName string) {
+	err := util.DeleteNetworkPolicy(ctx.Clientset, ctx.Namespace, policyName)
+	Expect(err).ToNot(HaveOccurred(), "Failed to delete NetworkPolicy %s", policyName)
 }

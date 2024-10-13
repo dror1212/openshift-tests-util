@@ -36,7 +36,7 @@ var _ = Describe("Service type ClusterIP access from same namespace", func() {
 		}
 
 		// Create the main test pod
-		ctx.CreateTestPodHelper(podName, containers)
+		ctx.CreateTestPodHelper(podName, containers, 3)
 
 		// Create a ClusterIP service for the pod
 		servicePorts := []corev1.ServicePort{
@@ -61,10 +61,10 @@ var _ = Describe("Service type ClusterIP access from same namespace", func() {
 		}
 	
 		// Create the test pod in the same namespace
-		ctx.CreateTestPodHelper(testPodName, testContainers)
+		ctx.CreateTestPodHelper(testPodName, testContainers, 3)
 	
 		// Verify access to the service
-		ctx.VerifyPodAccess(testPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(testPodName, "HTTP Response Code: 200")
 	})
 
 	AfterEach(func() {

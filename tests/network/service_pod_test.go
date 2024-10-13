@@ -36,7 +36,7 @@ var _ = Describe("Service type LoadBalancer on Pod", func() {
 		}
 
 		// Create the main test pod
-		ctx.CreateTestPodHelper(podName, containers)
+		ctx.CreateTestPodHelper(podName, containers, 3)
 
 		// Create a LoadBalancer service for the pod
 		servicePorts := []corev1.ServicePort{
@@ -59,10 +59,10 @@ var _ = Describe("Service type LoadBalancer on Pod", func() {
 		}
 
 		// Create the test pod using the retry mechanism
-		ctx.CreateTestPodHelper(testPodName, testContainers)
+		ctx.CreateTestPodHelper(testPodName, testContainers, 3)
 
 		// Wait for the test pod to complete and verify its status
-		ctx.VerifyPodAccess(testPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(testPodName, "HTTP Response Code: 200")
 	})
 
 	AfterEach(func() {

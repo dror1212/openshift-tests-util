@@ -35,7 +35,7 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 		}
 
 		// Create the main test pod
-		ctx.CreateTestPodHelper(podName, containers)
+		ctx.CreateTestPodHelper(podName, containers, 3)
 
 		// Create a ClusterIP service for the pod
 		servicePorts := []corev1.ServicePort{
@@ -63,10 +63,10 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 
 		// Create the test pod to access the route
 		testPodName := consts.TestPrefix + "-client-" + ctx.RandomName
-		ctx.CreateTestPodHelper(testPodName, testContainers)
+		ctx.CreateTestPodHelper(testPodName, testContainers, 3)
 
 		// Verify that the test pod can access the route and get an HTTP 200 response
-		ctx.VerifyPodAccess(testPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(testPodName, "HTTP Response Code: 200")
 	})
 
 	AfterEach(func() {
