@@ -78,9 +78,9 @@ var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 
 	AfterEach(func() {
 		// Clean up resources: Delete pods, services, and network policies
-		ctx.CleanupResource(serviceName, "service")
-		ctx.CleanupResource(podName, "pod")
 		ctxHelper.CleanupResource(testPodName, "pod")
-		ctxHelper.CleanupResource(serviceName, "networkPolicy")
+		ctx.CleanupResource(podName, "pod")
+		ctx.CleanupResource(serviceName, "service")
+		ctx.CleanupResource(policyName, "networkPolicy")
 	})
 })
