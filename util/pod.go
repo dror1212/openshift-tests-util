@@ -116,10 +116,12 @@ func RetryPodCreationWithWait(clientset *kubernetes.Clientset, config *rest.Conf
 
 		LogError("Pod %s failed or did not complete successfully. Retrying... Error: %v", podName, err)
 
-		// Delete the pod and retry if it failed or didn't reach running/completed state
-		err = clientset.CoreV1().Pods(namespace).Delete(context.TODO(), podName, metav1.DeleteOptions{})
-		if err != nil {
-			LogError("Failed to delete pod %s after failure: %v", podName, err)
+		if attempt < retryAttempts - 1 {
+			// Delete the pod and retry if it failed or didn't reach running/completed state
+			err = clientset.CoreV1().Pods(namespace).Delete(context.TODO(), podName, metav1.DeleteOptions{})
+			if err != nil {
+				LogError("Failed to delete pod %s after failure: %v", podName, err)
+			}
 		}
 		time.Sleep(interval)
 	}
