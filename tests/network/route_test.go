@@ -13,6 +13,7 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 	var (
 		ctx         *framework.TestContext
 		podName     string
+		testPodName string
 		serviceName string
 		routeName   string
 		routeURL    string
@@ -59,7 +60,7 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 		}
 
 		// Create the test pod to access the route
-		testPodName := consts.TestPrefix + "-client-" + ctx.RandomName
+		testPodName = consts.TestPrefix + "-client-" + ctx.RandomName
 		ctx.CreateTestPodHelper(testPodName, testContainers, 3)
 
 		// Verify that the test pod can access the route and get an HTTP 200 response
@@ -69,6 +70,7 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 	AfterEach(func() {
 		// Clean up resources: Delete the route, pods, and services
 		ctx.CleanupResource(podName, "pod")
+		ctx.CleanupResource(testPodName, "pod")
 		ctx.CleanupResource(serviceName, "service")
 		ctx.CleanupResource(routeName, "route")
 	})
