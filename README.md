@@ -104,7 +104,4 @@ To run tests, you can utilize the Ginkgo test suite. For example running all the
 ginkgo -v tests/network/
 ```
 
-
-  ```
-
 Each test is designed to validate the functionality of OpenShift/Kubernetes components in an isolated environment using test helpers from the `framework` package.
