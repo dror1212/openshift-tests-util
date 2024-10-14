@@ -1,7 +1,7 @@
 
-# KubeVirt VM Manager
+# OpenShift Tests Util
 
-A Go-based application to manage the creation and deployment of Virtual Machines (VMs) using KubeVirt and OpenShift templates. This project simplifies the process of creating VMs using templates, including resource configurations and cloud-init scripts.  
+A Go-based utility for managing tests related to Virtual Machines (VMs), services, network policies, and routes on OpenShift clusters. This project provides a framework for creating, deploying, and managing VMs, pods, and other resources using Kubernetes and KubeVirt, while also offering network and route testing capabilities.
 
 ## Table of Contents
 - [Overview](#overview)
@@ -9,18 +9,18 @@ A Go-based application to manage the creation and deployment of Virtual Machines
 - [Installation](#installation)
 - [Usage](#usage)
 - [Configuration](#configuration)
+- [Testing](#testing)
 
 ## Overview
 
-This project allows you to:
-- Create and manage VMs on KubeVirt using predefined templates.
-- Automatically configure VM resources (CPU, memory) and cloud-init scripts.
-- Automatically start the VMs after creation.
-- Optionally log all operations with timestamps to both a file and console.
+This project provides a utility to simplify:
+- Creating and managing VMs on KubeVirt using predefined templates.
+- Testing network policies, services (ClusterIP, LoadBalancer), and routes.
+- Running tests using multiple namespaces.
 
 ## Prerequisites
 
-Ensure you have the following prerequisites installed:
+Ensure you have the following installed:
 - Go (v1.16+)
 - Kubernetes cluster with KubeVirt and OpenShift installed.
 - Access to a KubeVirt-enabled cluster with the required permissions.
@@ -28,13 +28,14 @@ Ensure you have the following prerequisites installed:
 
 ### Environment Requirements:
 - `kubeconfig`: Ensure that your kubeconfig file is accessible for authentication.
+- Access to OpenShift and KubeVirt APIs for VM and network testing.
 
 ## Installation
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/dror1212/kubevirt-vm-manager.git
-   cd kubevirt-vm-manager
+   git clone https://github.com/dror1212/openshift-tests-util.git
+   cd openshift-tests-util
    ```
 
 2. **Install dependencies**:
@@ -52,45 +53,58 @@ Ensure you have the following prerequisites installed:
 
 ## Usage
 
-To run the application:
-
-```bash
-go run main.go
-```
-
-This will:
-- Authenticate with the Kubernetes cluster.
-- Create a new VM using the specified template.
-- Start the VM and log the progress.
+To run specific tests or use utilities from the framework, follow the instructions below.
 
 ### Example Commands:
-- **VM Creation**: 
-  Customize your VM by editing the parameters in `main.go` or passing them programmatically.
-  The default configuration uses a `print_os_info.sh` script for cloud-init to gather OS information.
 
-### Files Overview:
+- **Run the application** (VM Creation and Management):
+   ```bash
+   go run main.go
+   ```
+   This will:
+   - Authenticate with the Kubernetes cluster.
+   - Create a new VM using the specified template.
+   - Start the VM and log the progress.
 
-- **`main.go`**: The entry point of the application.
-- **`util/`**: Contains utility files like VM creation logic (`vm.go`).
-- **`consts/`**: Holds constant variables such as default memory and namespace settings.
-- **`print_os_info.sh`**: A shell script used by cloud-init to print OS information into a file on the VM.
-- **`go.mod`**: Go modules dependencies file.
+- **Run tests**: 
+  To run tests, use the Ginkgo test suite (default testing framework):
+  ```bash
+  ginkgo -r --focus "<Test Name>"
+  ```
+
+### Key Files and Directories:
+
+- **`util/`**: Contains utility files like:
+  - VM creation logic (`vm.go`)
+  - Pod management (`pod.go`)
+  - Network policy handling (`networkPolicy.go`)
+  - Route creation and handling (`route.go`)
+- **`framework/`**: Contains higher-level test helpers, such as:
+  - `pod_actions.go` for pod-related test utilities.
+  - `service_actions.go` for service creation and management.
+  - `route_actions.go` for managing OpenShift routes in tests.
+  - `test_context.go` for managing reusable test context (namespace, clients, etc.).
+- **`tests/`**: Contains Ginkgo-based test cases, including:
+  - `network/cluster_ip_test.go`: Tests for ClusterIP service access.
+  - `network/network_policy_test.go`: Tests for NetworkPolicy restrictions and access.
+  - `network/route_test.go`: Tests for routes in OpenShift.
+- **`consts/`**: Holds constant variables such as default memory, namespace settings, and more.
 
 ## Configuration
 
-You can configure the default settings like CPU, memory, and namespaces in the `consts/constants.go` file.
+Default settings like CPU, memory, and namespaces can be configured in the `consts/constants.go` file.
 
-```go
-package consts
+To adjust cloud-init scripts or custom startup scripts, modify or add new shell scripts to the `scripts/` directory.
 
-const (
-    DefaultMemory    = "2Gi"
-    DefaultCPUReq    = "500m"
-    DefaultCPULimit  = "1000m"
-    DefaultNamespace = "core"
-    TemplateNamespace = "template-ns"
-    DefaultVMName    = "test-vm-2"
-)
+## Testing
+
+To run tests, you can utilize the Ginkgo test suite. For example running all the network relating tests:
+
+```bash
+ginkgo -v tests/network/
 ```
 
-To adjust the script used for cloud-init, modify the `print_os_info.sh` file or create a new shell script.
+
+  ```
+
+Each test is designed to validate the functionality of OpenShift/Kubernetes components in an isolated environment using test helpers from the `framework` package.
