@@ -14,6 +14,8 @@ const (
 const (
     // Tests Consts
     TestPrefix = "functional-test"
+    HttpdImage = "HTTPD_IMAGE"
+    ClientImage = "CLIENT_IMAGE"
 )
 
 // DefaultResources defines the default resource requests and limits for VMs

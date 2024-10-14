@@ -12,15 +12,15 @@ import (
 
 var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 	var (
-		ctx         *framework.TestContext
-		ctxHelper   *framework.TestContext
-		podName     string
-		testPodName string
-		serviceName string
-		policyName  string
-		imageClient = "CLIENT_IMAGE"
-		image       = "HTTPD_IMAGE"
-		serviceIP   string
+		ctx           *framework.TestContext
+		ctxHelper     *framework.TestContext
+		serverPodName string
+		clientPodName string
+		serviceName   string
+		policyName    string
+		serviceIP     string
+		imageClient = consts.ClientImage
+		image       = consts.ClientImage
 	)
 
 	BeforeEach(func() {
@@ -29,8 +29,8 @@ var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 		ctxHelper = framework.Setup("test-4")
 
 		// Generate names for the pod, test pod, service, and network policy using the random name from context
-		podName = consts.TestPrefix + "-server-" + ctx.RandomName
-		testPodName = consts.TestPrefix + "-client-" + ctx.RandomName
+		serverPodName = consts.TestPrefix + "-server-" + ctx.RandomName
+		clientPodName = consts.TestPrefix + "-client-" + ctx.RandomName
 		serviceName = consts.TestPrefix + "-lb-" + ctx.RandomName
 		policyName = consts.TestPrefix + "-np-" + ctx.RandomName
 
@@ -40,14 +40,14 @@ var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 		}
 
 		// Create the main test pod
-		ctx.CreateTestPodHelper(podName, containers, 3)
+		ctx.CreateTestPodHelper(serverPodName, containers, 3)
 
 		// Create a LoadBalancer service for the pod
 		servicePorts := []corev1.ServicePort{
 			util.GeneratePort("http", 80, 80, "TCP"),
 		}
 
-		ctx.CreateServiceHelper(serviceName, corev1.ServiceTypeClusterIP, servicePorts, map[string]string{"app": podName})
+		ctx.CreateServiceHelper(serviceName, corev1.ServiceTypeClusterIP, servicePorts, map[string]string{"app": serverPodName})
 	})
 
 	// TODO: Add test before policy created
@@ -70,16 +70,16 @@ var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 		time.Sleep(10 * time.Second)
 
 		// Create the test pod in a different namespace
-		ctxHelper.CreateTestPodHelper(testPodName, testContainers, 3)
+		ctxHelper.CreateTestPodHelper(clientPodName, testContainers, 3)
 	
 		// Verify access is allowed after applying NetworkPolicy
-		ctxHelper.VerifyPodResponse(testPodName, "HTTP Response Code: 200")
+		ctxHelper.VerifyPodResponse(clientPodName, "HTTP Response Code: 200")
 	})	
 
 	AfterEach(func() {
 		// Clean up resources: Delete pods, services, and network policies
-		ctxHelper.CleanupResource(testPodName, "pod")
-		ctx.CleanupResource(podName, "pod")
+		ctxHelper.CleanupResource(clientPodName, "pod")
+		ctx.CleanupResource(serverPodName, "pod")
 		ctx.CleanupResource(serviceName, "service")
 		ctx.CleanupResource(policyName, "networkPolicy")
 	})

@@ -11,12 +11,12 @@ import (
 
 var _ = Describe("Communicate with running VM using pod IP", func() {
 	var (
-		ctx         *framework.TestContext
-		vmName      string
-		testPodName string
-		imageClient = "CLIENT_IMAGE"
+		ctx           *framework.TestContext
+		vmName        string
+		clientPodName string
+		vmPodIP       string
+		imageClient = consts.ClientImage
 		scriptPath  = "../../scripts/httpd_install.sh"  // Path to the bash script
-		vmPodIP     string
 	)
 
 	BeforeEach(func() {
@@ -25,7 +25,7 @@ var _ = Describe("Communicate with running VM using pod IP", func() {
 
 		// Generate names for the VM and test pod using the random name from context
 		vmName = consts.TestPrefix + ctx.RandomName
-		testPodName = consts.TestPrefix + "-client-" + ctx.RandomName
+		clientPodName = consts.TestPrefix + "-client-" + ctx.RandomName
 
 		// Create the VM
 		ctx.CreateTestVM(vmName, scriptPath, "")
@@ -48,15 +48,15 @@ var _ = Describe("Communicate with running VM using pod IP", func() {
 		}
 
 		// Create the test pod using the helper function
-		ctx.CreateTestPodHelper(testPodName, testContainers, 20)
+		ctx.CreateTestPodHelper(clientPodName, testContainers, 20)
 
 		// Verify the pod can access the VM using the helper function
-		ctx.VerifyPodResponse(testPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200")
 	})
 
 	AfterEach(func() {
 		// Clean up resources: Delete the test pod and the VM
-		ctx.CleanupResource(testPodName, "pod")
+		ctx.CleanupResource(clientPodName, "pod")
 		ctx.CleanupResource(vmName, "vm")
 	})
 })

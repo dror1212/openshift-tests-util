@@ -11,13 +11,13 @@ import (
 
 var _ = Describe("Service type ClusterIP access from same namespace", func() {
 	var (
-		ctx         *framework.TestContext
-		podName     string
-		testPodName string
-		serviceName string
-		imageClient = "CLIENT_IMAGE"
-		image       = "HTTPD_IMAGE"
-		serviceIP   string
+		ctx           *framework.TestContext
+		serverPodName string
+		clientPodName string
+		serviceName   string
+		serviceIP     string
+		imageClient = consts.ClientImage
+		image       = consts.ClientImage
 	)
 
 	BeforeEach(func() {
@@ -25,8 +25,8 @@ var _ = Describe("Service type ClusterIP access from same namespace", func() {
 		ctx = framework.Setup("core")
 
 		// Generate names for the pod, test pod, and service using the random name from context
-		podName = consts.TestPrefix + "-server-" + ctx.RandomName
-		testPodName = consts.TestPrefix + "-client-" + ctx.RandomName
+		serverPodName = consts.TestPrefix + "-server-" + ctx.RandomName
+		clientPodName = consts.TestPrefix + "-client-" + ctx.RandomName
 		serviceName = consts.TestPrefix + "-clusterip-" + ctx.RandomName
 
 		// Define the pod to be exposed by the ClusterIP service
@@ -35,13 +35,13 @@ var _ = Describe("Service type ClusterIP access from same namespace", func() {
 		}
 
 		// Create the main test pod
-		ctx.CreateTestPodHelper(podName, containers, 3)
+		ctx.CreateTestPodHelper(serverPodName, containers, 3)
 
 		// Create a ClusterIP service for the pod
 		servicePorts := []corev1.ServicePort{
 			util.GeneratePort("http", 80, 80, "TCP"),
 		}
-		ctx.CreateServiceHelper(serviceName, corev1.ServiceTypeClusterIP, servicePorts, map[string]string{"app": podName})
+		ctx.CreateServiceHelper(serviceName, corev1.ServiceTypeClusterIP, servicePorts, map[string]string{"app": serverPodName})
 	})
 
 	It("should allow access to the ClusterIP service from the same namespace", func() {
@@ -56,16 +56,16 @@ var _ = Describe("Service type ClusterIP access from same namespace", func() {
 		}
 	
 		// Create the test pod in the same namespace
-		ctx.CreateTestPodHelper(testPodName, testContainers, 3)
+		ctx.CreateTestPodHelper(clientPodName, testContainers, 3)
 	
 		// Verify access to the service
-		ctx.VerifyPodResponse(testPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200")
 	})
 
 	AfterEach(func() {
 		// Clean up resources in both namespaces
-		ctx.CleanupResource(podName, "pod")
-		ctx.CleanupResource(testPodName, "pod")
+		ctx.CleanupResource(serverPodName, "pod")
+		ctx.CleanupResource(clientPodName, "pod")
 		ctx.CleanupResource(serviceName, "service")
 	})
 })
