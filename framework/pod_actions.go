@@ -20,6 +20,18 @@ func (ctx *TestContext) CreateTestPodHelper(podName string, containers []util.Co
 	util.LogInfo("Successfully created test pod %s", podName)
 }
 
+// CreateTestPodExpectingFailureHelper creates a test pod and expects it to fail (e.g., due to NetworkPolicy restrictions).
+func (ctx *TestContext) CreateTestPodExpectingFailureHelper(podName string, containers []util.ContainerConfig, retries int) {
+	util.LogInfo("Creating test pod %s, expecting failure", podName)
+	_, err := util.RetryPodCreationWithWait(ctx.KubeClient, ctx.Config, ctx.Namespace, podName, containers, nil, 10*time.Second, 1*time.Minute, retries)
+	if err != nil {
+		util.LogInfo("Pod %s failed as expected", podName)
+	} else {
+		util.LogError("Pod %s did not fail as expected", podName)
+		Expect(errors.Wrap(err, "did not fail fail to create test client pod after retries")).ToNot(HaveOccurred())
+	}
+}
+
 // WaitForPodAndCheckLogs waits for the pod to complete and checks logs for a substring.
 func (ctx *TestContext) WaitForPodAndCheckLogs(podName, logSubstring string, checkInterval, timeout time.Duration, retries int) error {
 	util.LogInfo("Waiting for pod %s to complete and checking logs for substring: %s", podName, logSubstring)
