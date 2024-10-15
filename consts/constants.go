@@ -14,8 +14,8 @@ const (
 const (
     // Tests Consts
     TestPrefix = "functional-test"
-    HttpdImage = "HTTPD_IMAGE"
-    ClientImage = "CLIENT_IMAGE"
+    HttpdImage = "quay.med.one:8443/openshift/httpd"
+    ClientImage = "quay.med.one:8443/openshift/ubi8/ubi"
 )
 
 // DefaultResources defines the default resource requests and limits for VMs

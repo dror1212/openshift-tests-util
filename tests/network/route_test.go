@@ -17,7 +17,8 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 		serviceName   string
 		routeName     string
 		routeURL      string
-		image       = consts.ClientImage
+		image       = consts.HttpdImage
+		clientImage = consts.ClientImage
 	)
 
 	BeforeEach(func() {
@@ -41,7 +42,7 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 		servicePorts := []corev1.ServicePort{
 			util.GeneratePort("http", 80, 80, "TCP"), // Port 80 for HTTP
 		}
-		ctx.CreateServiceHelper(serviceName, corev1.ServiceTypeClusterIP, servicePorts, map[string]string{"app": serverPodName})
+		ctx.CreateServiceHelper(serviceName, "ClusterIP", servicePorts, map[string]string{"app": serverPodName})
 
 		// Create a Route for the service to expose it externally
 		ctx.CreateRouteHelper(routeName, serviceName, 80, "")
@@ -54,7 +55,7 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 
 		// Define the test pod that will access the route using curl
 		testContainers := []util.ContainerConfig{
-			util.CreateContainerConfig("curl-container", consts.ClientImage, []string{
+			util.CreateContainerConfig("curl-container", clientImage, []string{
 				"curl", "--fail", "--retry", "5", "-w", "HTTP Response Code: %{http_code}\n", routeURL,
 			}, util.GenerateResourceRequirements("100m", "400m", "200Mi", "200Mi")),
 		}

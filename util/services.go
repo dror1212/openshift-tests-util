@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	"time"
+	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,8 +31,9 @@ func GeneratePort(name string, port, targetPort int, protocol string) corev1.Ser
 	}
 }
 
-// CreateService creates a Kubernetes service of a specified type (ClusterIP, NodePort, LoadBalancer)
-func CreateService(clientset *kubernetes.Clientset, namespace, serviceName string, serviceType corev1.ServiceType, ports []corev1.ServicePort, labels map[string]string) (*corev1.Service, error) {
+// CreateService creates a Kubernetes service of a specified type (ClusterIP, NodePort, LoadBalancer, or Headless).
+func CreateService(clientset *kubernetes.Clientset, namespace, serviceName string, serviceType string, ports []corev1.ServicePort, labels map[string]string) (*corev1.Service, error) {
+	// Set default labels if not provided
 	if labels == nil {
 		labels = map[string]string{
 			"app": serviceName,
@@ -45,10 +47,28 @@ func CreateService(clientset *kubernetes.Clientset, namespace, serviceName strin
 			Namespace: namespace,
 		},
 		Spec: corev1.ServiceSpec{
-			Type:     serviceType,
 			Ports:    ports,
 			Selector: labels,
 		},
+	}
+
+	// Handle the service type
+	switch serviceType {
+	case "Headless":
+		service.Spec.ClusterIP = "None"
+		LogInfo("Creating headless service %s", serviceName)
+	case "ClusterIP":
+		service.Spec.Type = corev1.ServiceTypeClusterIP
+		LogInfo("Creating ClusterIP service %s", serviceName)
+	case "NodePort":
+		service.Spec.Type = corev1.ServiceTypeNodePort
+		LogInfo("Creating NodePort service %s", serviceName)
+	case "LoadBalancer":
+		service.Spec.Type = corev1.ServiceTypeLoadBalancer
+		LogInfo("Creating LoadBalancer service %s", serviceName)
+	default:
+		LogError("Unsupported service type: %s", serviceType)
+		return nil, fmt.Errorf("unsupported service type: %s", serviceType)
 	}
 
 	// Create the service in Kubernetes
@@ -59,7 +79,7 @@ func CreateService(clientset *kubernetes.Clientset, namespace, serviceName strin
 	}
 
 	// If the service type is LoadBalancer, wait for the external IP to be assigned
-	if serviceType == corev1.ServiceTypeLoadBalancer {
+	if serviceType == "LoadBalancer" {
 		LogInfo("Waiting for the LoadBalancer service %s to get an external IP...", serviceName)
 		err := WaitForServiceReady(clientset, namespace, serviceName, 5*time.Second, 120*time.Second)
 		if err != nil {
@@ -77,6 +97,7 @@ func CreateService(clientset *kubernetes.Clientset, namespace, serviceName strin
 		LogInfo("Service %s is ready with external IP: %s", serviceName, service.Status.LoadBalancer.Ingress[0].IP)
 	}
 
+	LogInfo("Service %s of type %s created successfully", serviceName, serviceType)
 	return service, nil
 }
 
@@ -107,4 +128,20 @@ func GetServiceIP(clientset *kubernetes.Clientset, namespace, serviceName string
 	// Handle unsupported service types
 	LogError("Unsupported service type %s for service %s", service.Spec.Type, serviceName)
 	return "", nil
+}
+
+// GetServiceDNSName retrieves the DNS name of a service in the cluster dynamically
+func GetServiceDNSName(clientset *kubernetes.Clientset, namespace, serviceName string) (string, error) {
+	// Fetch the service from the Kubernetes cluster
+	service, err := clientset.CoreV1().Services(namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
+	if err != nil {
+		LogError("Failed to get service %s: %v", serviceName, err)
+		return "", fmt.Errorf("failed to get service %s: %v", serviceName, err)
+	}
+
+	// Construct the DNS name dynamically
+	dnsName := fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace)
+	LogInfo("Service DNS Name: %s", dnsName)
+
+	return dnsName, nil
 }

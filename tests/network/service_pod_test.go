@@ -16,7 +16,7 @@ var _ = Describe("Service type LoadBalancer on Pod", func() {
 		clientPodName string
 		serviceName   string
 		imageClient = consts.ClientImage
-		image       = consts.ClientImage
+		image       = consts.HttpdImage
 		serviceIP     string
 	)
 
@@ -41,7 +41,7 @@ var _ = Describe("Service type LoadBalancer on Pod", func() {
 		servicePorts := []corev1.ServicePort{
 			util.GeneratePort("http", 80, 80, "TCP"),
 		}
-		ctx.CreateServiceHelper(serviceName, corev1.ServiceTypeLoadBalancer, servicePorts, map[string]string{"app": serverPodName})
+		ctx.CreateServiceHelper(serviceName, "LoadBalancer", servicePorts, map[string]string{"app": serverPodName})
 	})
 
 	It("should expose the service with a LoadBalancer and allow access to a pod from another pod", func() {

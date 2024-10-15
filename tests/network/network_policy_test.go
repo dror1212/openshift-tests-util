@@ -20,7 +20,7 @@ var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 		policyName    string
 		serviceIP     string
 		imageClient = consts.ClientImage
-		image       = consts.ClientImage
+		image       = consts.HttpdImage
 	)
 
 	BeforeEach(func() {
@@ -47,7 +47,7 @@ var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 			util.GeneratePort("http", 80, 80, "TCP"),
 		}
 
-		ctx.CreateServiceHelper(serviceName, corev1.ServiceTypeClusterIP, servicePorts, map[string]string{"app": serverPodName})
+		ctx.CreateServiceHelper(serviceName, "ClusterIP", servicePorts, map[string]string{"app": serverPodName})
 	})
 
 	// TODO: Add test before policy created

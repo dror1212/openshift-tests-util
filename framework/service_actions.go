@@ -8,7 +8,7 @@ import (
 )
 
 // CreateServiceHelper creates a Kubernetes service of a specified type (ClusterIP, LoadBalancer, etc.)
-func (ctx *TestContext) CreateServiceHelper(serviceName string, serviceType corev1.ServiceType, servicePorts []corev1.ServicePort, labels map[string]string) {
+func (ctx *TestContext) CreateServiceHelper(serviceName string, serviceType string, servicePorts []corev1.ServicePort, labels map[string]string) {
 	_, err := util.CreateService(ctx.KubeClient, ctx.Namespace, serviceName, serviceType, servicePorts, labels)
 	Expect(err).ToNot(HaveOccurred(), "Failed to create service %s of type %s", serviceName, serviceType)
 }

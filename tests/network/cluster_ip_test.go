@@ -17,7 +17,7 @@ var _ = Describe("Service type ClusterIP access from same namespace", func() {
 		serviceName   string
 		serviceIP     string
 		imageClient = consts.ClientImage
-		image       = consts.ClientImage
+		image       = consts.HttpdImage
 	)
 
 	BeforeEach(func() {
@@ -41,7 +41,7 @@ var _ = Describe("Service type ClusterIP access from same namespace", func() {
 		servicePorts := []corev1.ServicePort{
 			util.GeneratePort("http", 80, 80, "TCP"),
 		}
-		ctx.CreateServiceHelper(serviceName, corev1.ServiceTypeClusterIP, servicePorts, map[string]string{"app": serverPodName})
+		ctx.CreateServiceHelper(serviceName, "ClusterIP", servicePorts, map[string]string{"app": serverPodName})
 	})
 
 	It("should allow access to the ClusterIP service from the same namespace", func() {
