@@ -59,7 +59,7 @@ var _ = Describe("Service type Headless access from same namespace", func() {
 		ctx.CreateTestPodHelper(clientPodName, testContainers, 3)
 
 		// Verify DNS access to the headless service
-		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200", 3)
 	})
 
 	AfterEach(func() {

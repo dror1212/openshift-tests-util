@@ -73,7 +73,7 @@ var _ = Describe("NetworkPolicy to restrict access to ports", func() {
 		ctxHelper.CreateTestPodHelper(clientPodName, testContainers, 3)
 	
 		// Verify access is allowed after applying NetworkPolicy
-		ctxHelper.VerifyPodResponse(clientPodName, "HTTP Response Code: 200")
+		ctxHelper.VerifyPodResponse(clientPodName, "HTTP Response Code: 200", 3)
 	})	
 
 	AfterEach(func() {

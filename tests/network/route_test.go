@@ -65,7 +65,7 @@ var _ = Describe("Create Route with service and access from the cluster", func()
 		ctx.CreateTestPodHelper(clientPodName, testContainers, 3)
 
 		// Verify that the test pod can access the route and get an HTTP 200 response
-		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200", 3)
 	})
 
 	AfterEach(func() {

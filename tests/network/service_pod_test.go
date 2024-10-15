@@ -58,7 +58,7 @@ var _ = Describe("Service type LoadBalancer on Pod", func() {
 		ctx.CreateTestPodHelper(clientPodName, testContainers, 3)
 
 		// Wait for the test pod to complete and verify its status
-		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200", 3)
 	})
 
 	AfterEach(func() {

@@ -13,53 +13,35 @@ import (
 	"kubevirt.io/client-go/kubecli"
 )
 
-func WaitForPodCompletionOrFailure(clientset *kubernetes.Clientset, namespace, podName string, interval, timeout time.Duration) error {
+// WaitForPodState waits for a Pod to reach a specific state (running, completed, or failed) based on the provided options.
+func WaitForPodState(clientset *kubernetes.Clientset, namespace, podName string, interval, timeout time.Duration, retries int, failOnFailure bool) error {
 	return WaitFor(func() (bool, error) {
-		pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+		pod, err := GetPod(clientset, namespace, podName)
 		if err != nil {
 			LogError("Error fetching pod: %v", err)
 			return false, err
 		}
 
-		// Check if the pod is either completed successfully or failed
-		switch pod.Status.Phase {
-		case corev1.PodSucceeded:
-			LogInfo("Pod %s has completed successfully.", podName)
-			return true, nil
-		case corev1.PodFailed:
-			LogError("Pod %s has failed.", podName)
-			return true, fmt.Errorf("pod %s has failed", podName) // Return true here to stop the waiting
-		}
-
-		// Log the current phase of the pod if it hasn't completed
-		LogInfo("Pod %s is in phase: %s", podName, pod.Status.Phase)
-		return false, nil
-	}, interval, timeout)
-}
-
-// WaitForPodRunning waits for a Pod to reach the Running or Completed state.
-func WaitForPodRunning(clientset *kubernetes.Clientset, namespace, podName string, interval, timeout time.Duration) error {
-	return WaitFor(func() (bool, error) {
-		pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
-		if err != nil {
-			LogError("Error fetching pod: %v", err)
-			return false, err
-		}
 		switch pod.Status.Phase {
 		case corev1.PodRunning:
 			LogInfo("Pod %s is now running.", podName)
 			return true, nil
 		case corev1.PodSucceeded:
-			LogInfo("Pod %s has completed.", podName)
+			LogInfo("Pod %s has completed successfully.", podName)
 			return true, nil
 		case corev1.PodFailed:
-			LogError("Pod %s has failed.", podName)
-			return false, fmt.Errorf("pod %s has failed", podName)
+			LogWarn("Pod %s has failed. This is considered a terminal state.", podName)
+			// Decide whether to treat failure as terminal or not based on the failOnFailure flag
+			if failOnFailure {
+				return true, fmt.Errorf("pod %s has failed", podName)
+			}
+			// If failOnFailure is false, just log the failure and continue
+			return true, nil
 		default:
 			LogInfo("Pod %s is in phase %s.", podName, pod.Status.Phase)
 			return false, nil
 		}
-	}, interval, timeout)
+	}, interval, timeout, retries)
 }
 
 // WaitForVMReady waits for a KubeVirt VM to be ready.
@@ -76,7 +58,7 @@ func WaitForVMReady(virtClient kubecli.KubevirtClient, namespace, vmName string,
 		}
 
 		return vm.Status.Ready, nil
-	}, interval, timeout)
+	}, interval, timeout, 0)
 }
 
 // WaitForTemplateInstanceReady waits for an OpenShift TemplateInstance to be instantiated.
@@ -95,7 +77,7 @@ func WaitForTemplateInstanceReady(templateClient *templateclientset.Clientset, n
 			}
 		}
 		return false, nil
-	}, interval, timeout)
+	}, interval, timeout, 0)
 }
 
 // WaitForServiceReady waits for a LoadBalancer service to have an external IP assigned.
@@ -115,5 +97,5 @@ func WaitForServiceReady(clientset *kubernetes.Clientset, namespace, serviceName
 
 		LogInfo("Waiting for service %s to get an external IP...", serviceName)
 		return false, nil
-	}, interval, timeout)
+	}, interval, timeout, 0)
 }

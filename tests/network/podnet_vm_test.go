@@ -51,7 +51,7 @@ var _ = Describe("Communicate with running VM using pod IP", func() {
 		ctx.CreateTestPodHelper(clientPodName, testContainers, 20)
 
 		// Verify the pod can access the VM using the helper function
-		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200", 3)
 	})
 
 	AfterEach(func() {

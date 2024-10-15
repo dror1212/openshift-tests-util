@@ -59,7 +59,7 @@ var _ = Describe("Service type ClusterIP access from same namespace", func() {
 		ctx.CreateTestPodHelper(clientPodName, testContainers, 3)
 	
 		// Verify access to the service
-		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200")
+		ctx.VerifyPodResponse(clientPodName, "HTTP Response Code: 200", 3)
 	})
 
 	AfterEach(func() {

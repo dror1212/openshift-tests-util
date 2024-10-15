@@ -34,7 +34,7 @@ func PollSSHConnection(sshConfig *SSHConfig, interval, timeout time.Duration) (*
 		}
 		LogInfo("SSH not ready, retrying...")
 		return false, nil // Return false to indicate retry
-	}, interval, timeout)
+	}, interval, timeout, 0)
 
 	if err != nil {
 		LogError("Timed out waiting for SSH connection to become available: %v", err)
