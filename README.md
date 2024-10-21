@@ -57,15 +57,6 @@ To run specific tests or use utilities from the framework, follow the instructio
 
 ### Example Commands:
 
-- **Run the application** (VM Creation and Management):
-   ```bash
-   go run main.go
-   ```
-   This will:
-   - Authenticate with the Kubernetes cluster.
-   - Create a new VM using the specified template.
-   - Start the VM and log the progress.
-
 - **Run tests**: 
   To run tests, use the Ginkgo test suite (default testing framework):
   ```bash
